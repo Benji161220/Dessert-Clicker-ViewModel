@@ -116,15 +116,7 @@ private fun RevenueInfo(revenue: Int, modifier: Modifier = Modifier) {
 }
 
 
-@Preview
-@Composable
-fun MyDessertClickerAppPreview() {
-    DessertClickerTheme {
-        DessertScreen(
-            DessertViewModel()
-        )
-    }
-}
+
 
 @Composable
 private fun DessertClickerAppBar(
@@ -213,6 +205,15 @@ private fun TransactionInfo(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(dimensionResource(R.dimen.padding_medium))
+        )
+    }
+}
+@Preview
+@Composable
+fun MyDessertClickerAppPreview() {
+    DessertClickerTheme {
+        DessertScreen(
+
         )
     }
 }
