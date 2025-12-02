@@ -11,21 +11,28 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import com.example.dessertclicker.R
+import com.example.dessertclicker.data.Datasource
+import com.example.dessertclicker.model.Dessert
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlin.collections.get
 
 class DessertViewModel : ViewModel(){
-    var revenue by rememberSaveable { mutableStateOf(0) }
-    var dessertsSold by rememberSaveable { mutableStateOf(0) }
+    private val _uiState = MutableStateFlow(DessertUIState())
+    val uiState: StateFlow<DessertUIState> = _uiState.asStateFlow()
 
-    val currentDessertIndex by rememberSaveable { mutableStateOf(0) }
+    private var desserts: List<Dessert> = Datasource.dessertList
 
-    var currentDessertPrice by rememberSaveable {
-        mutableStateOf(desserts[currentDessertIndex].price)
+    fun onShareButtonClicked(intentContext: Context) {
+        shareSoldDessertsInformation(
+            intentContext = intentContext,
+            dessertsSold = _uiState.value.dessertsSold,
+            revenue = _uiState.value.revenue
+        )
     }
-    var currentDessertImageId by rememberSaveable {
-        mutableStateOf(desserts[currentDessertIndex].imageId)
-    }
-    private fun shareSoldDessertsInformation(intentContext: Context, dessertsSold: Int, revenue: Int) {
+    fun shareSoldDessertsInformation(intentContext: Context, dessertsSold: Int, revenue: Int) {
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(
@@ -46,5 +53,39 @@ class DessertViewModel : ViewModel(){
                 Toast.LENGTH_LONG
             ).show()
         }
+    }
+    fun onDessertClicked() {
+        // Update the revenue
+        _uiState.update { currentState ->
+            currentState.copy(revenue = currentState.revenue + _uiState.value.currentDessertPrice,
+                dessertsSold = currentState.dessertsSold + 1)
+        }
+
+        // Show the next dessert
+        val dessertToShow = determineDessertToShow(desserts, _uiState.value.dessertsSold)
+        _uiState.update { currentState ->
+            currentState.copy(
+                currentDessertImageId = dessertToShow.imageId,
+                currentDessertPrice = dessertToShow.price)
+        }
+    }
+    fun determineDessertToShow(
+        desserts: List<Dessert>,
+        dessertsSold: Int
+    ): Dessert {
+        var dessertToShow = desserts.first()
+        for (dessert in desserts) {
+            if (dessertsSold >= dessert.startProductionAmount) {
+                dessertToShow = dessert
+            } else {
+                // The list of desserts is sorted by startProductionAmount. As you sell more desserts,
+                // you'll start producing more expensive desserts as determined by startProductionAmount
+                // We know to break as soon as we see a dessert who's "startProductionAmount" is greater
+                // than the amount sold.
+                break
+            }
+        }
+
+        return dessertToShow
     }
 }
