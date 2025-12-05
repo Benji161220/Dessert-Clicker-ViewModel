@@ -208,6 +208,7 @@ private fun TransactionInfo(
         )
     }
 }
+
 @Preview
 @Composable
 fun MyDessertClickerAppPreview() {
